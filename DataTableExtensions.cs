@@ -172,7 +172,7 @@ namespace toolbelt
         private static string GetValue(DataRow dr, DataColumn dc)
         {
             string value = dr[dc].ToString();
-            if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+            if (value.Any(x => x == ',' || x == '"' || x == '\n'))
                 value = string.Concat(quote, value.Replace(quote, doublequote), quote);
             return value;
         }
