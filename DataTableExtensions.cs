@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using Microsoft.VisualBasic.FileIO;
 
 namespace toolbelt
 {
@@ -130,6 +132,82 @@ namespace toolbelt
                     dr[dc] = elem.GetString();
                 }
             }
+        }
+
+        public static DataTable FromCsv(this DataTable dt, Stream s, bool headerLine = false)
+        {
+            using (TextFieldParser parser = new TextFieldParser(s, new UTF8Encoding(false), false, true))
+            {
+                parser.Delimiters = new[] { "," };
+                parser.CommentTokens = new[] { "#" };
+                parser.HasFieldsEnclosedInQuotes = true;
+                parser.TrimWhiteSpace = true;
+
+                // find first line with content
+                string[] fields;
+                while ((fields = parser.ReadFields()) != null)
+                {
+                    if (fields.Length != 0)
+                        break;
+                }
+                // empty stream
+                if (fields == null)
+                    return dt;
+
+                // parse header line
+                if (headerLine)
+                {
+                    List<DataColumn> header = new List<DataColumn>();
+                    foreach (var field in fields)
+                    {
+                        DataColumn dc = dt.Columns
+                            .OfType<DataColumn>()
+                            .FirstOrDefault(x => x.ColumnName == field);
+                        if (dc == null)
+                        {
+                            dc = new DataColumn(field);
+                            dt.Columns.Add(dc);
+                        }
+                        header.Add(dc);
+                    }
+                }
+
+                // parse content
+                while ((fields = parser.ReadFields()) != null)
+                {
+                    // skip empty lines
+                    if (fields.Length == 0)
+                        continue;
+
+                    DataRow dr = dt.NewRow();
+                    dt.Rows.Add(dr);
+                    for (int i = 0; i < fields.Length && i < dt.Columns.Count; i++)
+                    {
+                        DataColumn dc = dt.Columns[i];
+                        decimal tmp;
+                        if (dc.DataType == typeof(sbyte)
+                            || dc.DataType == typeof(byte)
+                            || dc.DataType == typeof(short)
+                            || dc.DataType == typeof(ushort)
+                            || dc.DataType == typeof(int)
+                            || dc.DataType == typeof(uint)
+                            || dc.DataType == typeof(long)
+                            || dc.DataType == typeof(ulong)
+                            || dc.DataType == typeof(float)
+                            || dc.DataType == typeof(double)
+                            || dc.DataType == typeof(decimal))
+                        {
+                            if (decimal.TryParse(fields[i], out tmp))
+                                dr[dc] = tmp;
+                        }
+                        else if (dc.DataType == typeof(string))
+                        {
+                            dr[dc] = fields[i];
+                        }
+                    }
+                }
+            }
+            return dt;
         }
 
         public static DataTable ToCsv(this DataTable dt, Stream s)
