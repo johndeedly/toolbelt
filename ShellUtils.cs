@@ -23,10 +23,11 @@ namespace toolbelt
                     StandardOutputEncoding = new UTF8Encoding(false)
                 };
                 proc.Start();
-                Task stdout = proc.StandardOutput.BaseStream.CopyToAsync(outputStream ?? Console.OpenStandardOutput());
-                Task stderr = proc.StandardError.BaseStream.CopyToAsync(errorStream ?? Console.OpenStandardError());
+                Task stdout = Task.Run(() => proc.StandardOutput.BaseStream.CopyToAsync(outputStream ?? Console.OpenStandardOutput()));
+                Task stderr = Task.Run(() => proc.StandardError.BaseStream.CopyToAsync(errorStream ?? Console.OpenStandardError()));
                 proc.WaitForExit();
-                Task.WaitAll(stdout, stderr);
+                stdout.GetAwaiter().GetResult();
+                stderr.GetAwaiter().GetResult();
             });
         }
 
@@ -36,7 +37,7 @@ namespace toolbelt
             {
                 using (MemoryStream mem = new MemoryStream())
                 {
-                    RunShellAsync(fileName, arguments, mem).Wait();
+                    RunShellAsync(fileName, arguments, mem).GetAwaiter().GetResult();
                     string txt = Encoding.UTF8.GetString(mem.ToArray());
                     return txt;
                 }
