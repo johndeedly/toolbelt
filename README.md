@@ -8,3 +8,13 @@ This work is licensed under a
 [cc-by-nc-sa]: LICENSE
 [cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-informational.svg
 [status-shield]: https://img.shields.io/badge/status-active%20development-brightgreen
+
+# Requirements
+
+Add the following line(s) to your nuget includes:
+
+```xml
+<ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="*" />
+</ItemGroup>
+```
