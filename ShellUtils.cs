@@ -31,13 +31,13 @@ namespace toolbelt
             });
         }
 
-        public static Task<string> RunShellTextAsync(string fileName, string arguments)
+        public static Task<string> RunShellTextAsync(string fileName, string arguments, Stream errorStream = null)
         {
             return Task.Run(delegate
             {
                 using (MemoryStream mem = new MemoryStream())
                 {
-                    RunShellAsync(fileName, arguments, mem).GetAwaiter().GetResult();
+                    RunShellAsync(fileName, arguments, mem, errorStream).GetAwaiter().GetResult();
                     string txt = Encoding.UTF8.GetString(mem.ToArray());
                     return txt;
                 }
